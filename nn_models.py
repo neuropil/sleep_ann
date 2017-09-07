@@ -31,7 +31,8 @@ def feedforward(layer_spec=[64],num_labels=5,activ='sigmoid',
 
 # TODO: Finish the function below
 
-# def basic_rnn(timesteps,output_dim=4):
-#     model = Sequential()
-#     model.add( LSTM(10,input_shape=(timesteps,8),unroll=True,return_sequences=True) )
-#     model.add( Dense(11) )
+def basic_rnn(timesteps,output_dim=4):
+    model = Sequential()
+    model.add( LSTM(10, input_shape=(timesteps,8), unroll=True, return_sequences=True) )
+    model.add( Dense(10) )
+    return model

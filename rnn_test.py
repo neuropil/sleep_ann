@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import scipy.io as sio
+from sklearn.preprocessing import StandardScaler
 
 from nn_models import basic_rnn
 from utils import rolling_window,load_preprocessed
@@ -9,10 +10,16 @@ from utils import rolling_window,load_preprocessed
 all_data = load_preprocessed()
 data = all_data[0]
 
-def timestep_slice_data(data,slice_size=10):
+def timestep_slice_data(data,slice_size=10,rescale=True):
     # Load inputs and outputs
     labels = data['stages'][:,2]
-    pows = data['pows'].swapaxes(0,1)
+    pows = data['pows']
+    if rescale:
+        scaler = StandardScaler()
+        scaler.fit(pows)
+        pows = scaler.transform(pows)
+
+    pows = pows.swapaxes(0,1)
 
 
     # timeslice labels [ N,slice_size ]
@@ -25,6 +32,7 @@ def timestep_slice_data(data,slice_size=10):
 
     return seq_pows,seq_labels
 
-X,Y = timestep_slice_data(data,10)
-
-# model = basic_rnn()
+tsteps = 10
+X,Y = timestep_slice_data(data,tsteps)
+model = basic_rnn(tsteps)
+import ipdb; ipdb.set_trace()

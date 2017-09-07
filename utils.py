@@ -4,6 +4,7 @@ import numpy as np
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import StandardScaler
 
 def load_preprocessed(file_names=['band_pow1.mat','band_pow2.mat']):
     data_path = '/home/elijahc/data/uminn/preprocessed'
@@ -34,8 +35,13 @@ def get_oh_labels(dat):
 
     return oh_labels
 
-def get_pow_bands(dat):
+def get_pow_bands(dat,rescale=False):
     pow_bands = dat['pows']
+    if rescale:
+        scaler = StandardScaler()
+        scaler.fit(pow_bands)
+        pow_bands = scaler.transform(pow_bands)
+
     return pow_bands
 
 def rolling_window(a, window):
