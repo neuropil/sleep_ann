@@ -105,3 +105,6 @@ ENV/
 
 # local examples folder
 examples/
+
+# Ignore temp pandas dataframe pickles
+*.df
