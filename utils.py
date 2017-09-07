@@ -1,5 +1,44 @@
+import os
+import scipy.io as sio
+import numpy as np
+
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
+
+def load_preprocessed(file_names=['band_pow1.mat','band_pow2.mat']):
+    data_path = '/home/elijahc/data/uminn/preprocessed'
+
+    file_paths = [os.path.join(data_path,fname) for fname in file_names]
+    return [ sio.loadmat(fp) for fp in file_paths ]
+
+def get_integer_labels(labels):
+    label_encoder = LabelEncoder()
+    return label_encoder.fit_transform(labels)
+
+def get_label_freq(labels):
+    int_enc = get_integer_labels(labels)
+    bcount = np.bincount(int_enc)
+    bfreq = bcount/len(int_enc)
+    return bfreq
+
+def get_oh_labels(dat):
+    stages = dat['stages']
+    windows = stages[:,0:2]
+    sleep_labels = stages[:,2].astype(np.int8)
+    window_diffs = windows[:,1] - windows[:,0]
+
+    oh_encoder = OneHotEncoder(sparse=False)
+    integer_encoded = get_integer_labels(sleep_labels)
+    integer_encoded = integer_encoded.reshape(len(integer_encoded),1)
+    oh_labels = oh_encoder.fit_transform(integer_encoded)
+
+    return oh_labels
+
+def get_pow_bands(dat):
+    pow_bands = dat['pows']
+    return pow_bands
+
 def rolling_window(a, window):
     shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
     strides = a.strides + (a.strides[-1],)
     return np.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
-
