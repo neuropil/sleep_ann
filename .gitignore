@@ -101,4 +101,7 @@ ENV/
 .mypy_cache/
 
 # vscode
-.vscode
+.vscode/
+
+# local examples folder
+examples/
