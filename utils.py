@@ -6,8 +6,19 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 
-def load_preprocessed(file_names=['band_pow1.mat','band_pow2.mat']):
-    data_path = '/home/elijahc/data/uminn/preprocessed'
+def load_preprocessed(data_path='/home/elijahc/data/uminn/preprocessed',
+file_names=[
+    'band_pow1.mat',
+    'band_pow2.mat',
+    'band_pow3.mat',
+    'band_pow4.mat',
+    'band_pow5.mat',
+    'band_pow6.mat',
+    'band_pow7.mat',
+    'band_pow8.mat',
+    'band_pow9.mat',
+    'band_pow10.mat']):
+    
 
     file_paths = [os.path.join(data_path,fname) for fname in file_names]
     return [ sio.loadmat(fp) for fp in file_paths ]
@@ -35,11 +46,9 @@ def get_oh_labels(dat):
 
     return oh_labels
 
-def get_pow_bands(dat,rescale=False):
+def get_pow_bands(dat,scaler=None):
     pow_bands = dat['pows']
-    if rescale:
-        scaler = StandardScaler()
-        scaler.fit(pow_bands)
+    if scaler is not None:
         pow_bands = scaler.transform(pow_bands)
 
     return pow_bands
