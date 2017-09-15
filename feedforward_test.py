@@ -43,7 +43,7 @@ def cross_validation(X,Y,kfolds,model_generator):
 
         # Fit model
         m.fit(X_train,Y_train,
-              epochs=2000,verbose=1, batch_size=32,
+              epochs=500,verbose=0, batch_size=32,
               validation_split=0.1)
 
         # Score model
@@ -56,10 +56,27 @@ all_pow = merged_data['pows']
 scaler = StandardScaler()
 scaler.fit(all_pow)
 
-# data = all_data[1]
+for i,d in enumerate(all_data):
+    pt_id = str(i+1)
+    data = d
+    print('Fetching X and Y for ',pt_id,'...')
+    X = get_pow_bands(data,scaler=scaler)
+    Y = get_oh_labels(data)
+
+    # Make 10 randomly chosen 90:10 splits of the data
+    kf = KFold(n_splits=10,shuffle=True)
+    kf.get_n_splits(X)
+
+    print('Running cross validation for pt',pt_id,'...')
+    results = cross_validation(X,Y,kf,feedforward)
+    results_df = pd.DataFrame(results,columns=['loss','accuracy'])
+    print('Writing results to pickle...')
+    results_df.to_pickle('pt'+pt_id+'_results.df')
+    print('')
+    print('pt',pt_id,' results:')
+    print(results_df['accuracy'].describe())
+
 data = merged_data
-X = get_pow_bands(data,scaler=scaler)
-Y = get_oh_labels(data)
 
 # s_lab = data['stages'][:,2]
 # lab_weights = 1/get_label_freq(s_lab)
@@ -69,7 +86,7 @@ Y = get_oh_labels(data)
 # Take a single 80:20 split of the data
 # train_idx,test_idx = next(kf.split(X))
 
-# Make 5 randomly chosen 80:20 splits of the data
+# Make 10 randomly chosen 90:10 splits of the data
 kf = KFold(n_splits=10,shuffle=True)
 kf.get_n_splits(X)
 
