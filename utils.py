@@ -23,7 +23,8 @@ def load_preprocessed(
             'band_pow7.mat',
             'band_pow8.mat',
             'band_pow9.mat',
-            'band_pow10.mat']):
+            # 'band_pow10.mat',
+            ]):
 
     file_paths = [os.path.join(data_path,fname) for fname in file_names]
     all_data = [ sio.loadmat(fp) for fp in file_paths ]
