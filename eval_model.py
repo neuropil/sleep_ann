@@ -31,7 +31,7 @@ def gen_arg_parser():
     mode_type.add_argument('-i','--individual',action='store_const',dest='mode',const='individual',default='merged')
     mode_type.add_argument('-p','--data_dir_root',type=str, default='/home/elijahc/data/uminn/preprocessed')
     mode_type.add_argument('--no_scaling',action='store_false', dest='scaler',default='True')
-    # mode_type.add_argument('-m','--merged',action='store_const',dest='mode',const='merged')
+    mode_type.add_argument('--merge_nrem',action='store_true', dest='merge_nrem',default=False)
 
     # Add cross-validation group
     split_type = parser.add_mutually_exclusive_group(required=True)
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     scaler=None
     parser = gen_arg_parser()
     args = parser.parse_args()
-    merged_data = load_preprocessed(args.data_dir_root,simple=True,merge_keys=['stages','pows'])
+    merged_data = load_preprocessed(args.data_dir_root,simple=args.merge_nrem,merge_keys=['stages','pows'])
     if args.scaler:
         scaler=StandardScaler()
         scaler.fit(merged_data['pows'])
@@ -58,14 +58,19 @@ if __name__ == "__main__":
     else:
         # Implement this
         pass
-    sleep_stages = data['stages_simple']
+
+    if args.merge_nrem==True:
+        sleep_stages = data['stages_simple']
+    else:
+        sleep_stages = data['stages'][:,2].astype(np.int8)
+
     if args.num_labels==None:
         num_labels=len(np.unique(sleep_stages))
     model_params = dict(
         activ=args.activation,
         reg_weight=args.kernel_reg_weight,
         optim=args.optimizer,
-        num_labels=num_labels,
+        num_labels=args.num_labels,
         loss=args.loss,
     )
     fit_params = {}
@@ -77,6 +82,6 @@ if __name__ == "__main__":
     pp(vars(args))
     power_bands = get_pow_bands(data,scaler)
     fit_params['sample_weight'] = get_inverse_freq_weights(sleep_stages)
-
+    import ipdb; ipdb.set_trace()
     clf = CVScore(**cvs)
     clf.fit(X=power_bands,y=sleep_stages,fit_params=fit_params)

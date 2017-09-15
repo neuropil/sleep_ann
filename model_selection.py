@@ -22,6 +22,7 @@ class CVScore():
         self.score_func = score_func
         self.scoring_metrics = ['accuracy','precision','recall','fscore']
         self.cv_results_ = {}
+        self.models_ = []
 
         for m in self.scoring_metrics:
             self.cv_results_['test_'+m]=[]
@@ -53,6 +54,7 @@ class CVScore():
             cols = ['test_'+s for s in self.scoring_metrics]
             for k,v in zip(cols,[a,p,r,f]):
                 self.cv_results_[k].append(v)
+            self.models_.append(self.estimator.model)
         
 def prepare_cvs(model,cv,scoring=[accuracy_score],n_splits=10,shuffle=True,**sk_params):
     models = dict(
