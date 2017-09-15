@@ -33,6 +33,7 @@ cvs = prepare_cvs(model=feedforward,cv='sss',
     scoring=[make_scorer(precision_score)],
     **model_params,
 )
+cvs['scoring'] = 'precision_macro'
 
 # Run combined
 merge_stages = merged_data['stages_simple']
@@ -40,7 +41,7 @@ merge_pows = get_pow_bands(merged_data,scaler)
 merge_stages_oh = get_oh_labels(merge_stages)
 merge_sample_weights = get_inverse_freq_weights(merge_stages)
 pp(cvs)
-results = cross_val_score(**cvs,X=merge_pows,y=merge_stages_oh,verbose=1)
+results = cross_val_score(**cvs,X=merge_pows,y=merge_stages_oh,verbose=1,fit_params=fit_params)
 import ipdb; ipdb.set_trace()
 
 
