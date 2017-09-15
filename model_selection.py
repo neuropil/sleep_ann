@@ -2,71 +2,77 @@ import numpy as np
 
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.model_selection import KFold
-from sklearn.model_selection import cross_val_score
 from sklearn.base import BaseEstimator,ClassifierMixin
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score,make_scorer,precision_recall_fscore_support
 from keras.wrappers.scikit_learn import KerasClassifier
 
-from nn_models import feedforward
+from nn_models import feedforward,basic_rnn
+from utils import get_oh_labels
 
-def gen_estimator(model_generator,**sk_params):
-    estimator = KerasClassifier(build_fn=model_generator,**sk_params)
-    return estimator
+class CVScore():
 
-def get_scores(estimator,x,y,score_funcs,score_func_params=None):
-    if score_func_params is None:
-        score_func_params = [{}]*len(score_funcs)
-    y_pred = estimator.predict(x)
-    return [ scorer(y,y_pred,**s_params) for scorer,s_params in zip(score_funcs,score_func_params)]
+    def __init__(self,estimator,cv=None,score_func=precision_recall_fscore_support):
 
-def multiscorer(estimator,x,y,score_funcs,score_func_params=None):
-    scores = get_scores(estimator,x,y,score_funcs,score_func_params)
-    print('score values')
-    print(scores)
-    return np.array(scores).sum()
-    
+        self.estimator = estimator
+        if cv is not None:
+            self.cv = cv
+        else:
+            self.cv = KFold()
+
+        self.score_func = score_func
+        self.scoring_metrics = ['accuracy','precision','recall','fscore']
+        self.cv_results_ = {}
+
+        for m in self.scoring_metrics:
+            self.cv_results_['test_'+m]=[]
+
+    def fit(self,X,y,fit_params):
+
+        self.y_classes = np.unique(y)
+        sample_weight = fit_params.pop('sample_weight',None)
+
+        i = 1
+        for train_idx,test_idx in self.cv.split(X,y):
+            x_train,y_train = X[train_idx],y[train_idx]
+            x_test,y_true = X[test_idx],y[test_idx]
+            if sample_weight is not None:
+                train_sample_weight = sample_weight[train_idx]
+            else:
+                train_sample_weight = None
+
+            y_train_oh = get_oh_labels(y_train)
+
+            self.estimator.fit(x_train,y_train_oh,sample_weight=train_sample_weight,
+                **fit_params)
+
+            l,a = self.estimator.model.evaluate(x_test,get_oh_labels(y_true),batch_size=128,verbose=0)
+            y_pred_class=self.estimator.model.predict_classes(x_test,batch_size=128,verbose=0) 
+            y_pred = [ self.y_classes[v] for v in y_pred_class]
+            p,r,f,_ = self.score_func(y_true,y_pred,average='weighted')
+            print('Split %d scores: '%i,[a,p,r,f])
+            cols = ['test_'+s for s in self.scoring_metrics]
+            for k,v in zip(cols,[a,p,r,f]):
+                self.cv_results_[k].append(v)
+        
 def prepare_cvs(model,cv,scoring=[accuracy_score],n_splits=10,shuffle=True,**sk_params):
+    models = dict(
+        feedforward=feedforward,
+        basic_rnn=basic_rnn
+    )
+    scoring = dict(
+        prfs=precision_recall_fscore_support,
+        acc=accuracy_score
+    )
     cvs = {}
-    est = KerasClassifier(build_fn=model,**sk_params)
+    est = KerasClassifier(build_fn=models[model],**sk_params)
     cvs['estimator'] = est
     # cvs['model'] = model(**sk_params)
-    if len(scoring) > 1:
-        cvs['scoring'] = multiscorer
-    else:
-        cvs['scoring'] = scoring[0]
 
     if cv == 'kfold':
         cvs['cv'] = KFold(n_splits=n_splits,shuffle=shuffle)
     elif cv in ['sss','stratified_shuffle_split']:
         cvs['cv'] = StratifiedShuffleSplit(n_splits=n_splits)
+    elif cv in ['logo','LeaveOneGroupOut']:
+        cvs['cv'] = LeaveOneGroupOut(n_splits=n_splits)
 
     return cvs
-
-    
-def cross_validation(X,Y,cv,model_generator,sample_weight=None,verbose=0):
-
-    score_results=[]
-    i=0
-    for train_idx,test_idx in cv.split(X,Y):
-        print('Split ',str(i+1))
-
-        X_train,Y_train = X[train_idx],Y[train_idx]
-        X_test,Y_test = X[test_idx],Y[test_idx]
-        # Instantiate model
-        m = model_generator(layer_spec=[128],num_labels=Y.shape[-1],
-                                optim='adam',reg_weight=0.01)
-
-        # Fit model
-        m.fit(X_train,Y_train,
-              epochs=500,verbose=verbose, batch_size=32,
-              sample_weight=sample_weight[train_idx],
-              validation_split=0.1,
-              )
-
-        # Score model
-        score = m.evaluate(X_test,Y_test,batch_size=128,verbose=0)
-        print('Split ',str(i+1),' Score: ',score)
-        score_results.append(score)
-        i+=1
-
-    return score_results

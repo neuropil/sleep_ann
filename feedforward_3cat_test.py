@@ -3,19 +3,16 @@ import pandas as pd
 from pprint import pprint as pp
 from nn_models import feedforward
 from utils import *
-from model_selection import prepare_cvs
+from model_selection import prepare_cvs,CVScore
 
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import precision_score,recall_score,make_scorer
+from sklearn.metrics import precision_recall_fscore_support
 
 '''
 Preprocessed datafiles are mat files with the following keys:
 bands : ndarray
 '''
-# osx_data_path = '/Users/elijahc/data/uminn/preprocessed'
-# all_data = load_preprocessed(data_path=osx_data_path,simple=True)
-# merged_data = load_preprocessed(data_path=osx_data_path,merge_keys=['pows','stages'],simple=True)
 file_names=[
     'band_pow1.mat',
     'band_pow2.mat',
@@ -23,38 +20,48 @@ file_names=[
     'band_pow4.mat',
     'band_pow5.mat',
     ]
-all_data = load_preprocessed(file_names=file_names,simple=True)
-merged_data = load_preprocessed(file_names=file_names,merge_keys=['pows','stages'],simple=True)
+# osx
+osx_data_path = '/Users/elijahc/data/uminn/preprocessed'
+all_data = load_preprocessed(data_path=osx_data_path,file_names=file_names,simple=True)
+merged_data = load_preprocessed(data_path=osx_data_path,file_names=file_names,merge_keys=['pows','stages'],simple=True)
+
+# linux
+# all_data = load_preprocessed(file_names=file_names,simple=True)
+# merged_data = load_preprocessed(file_names=file_names,merge_keys=['pows','stages'],simple=True)
 
 scaler = StandardScaler()
 scaler.fit(merged_data['pows'])
 
 model_params = dict(
     layer_spec=[128],
-    reg_weight=0.1,
+    # reg_weight=0.01,
     num_labels=3,
 )
 fit_params = dict(
-    validation_split=0.1,
-    epochs=250,
-    verbose=1,
+    # validation_split=0.1,
+    epochs=500,
+    verbose=0,
 )
 cvs = prepare_cvs(model=feedforward,cv='sss',
-    scoring=[make_scorer(precision_score)],
+    scoring=[precision_recall_fscore_support],
     **model_params,
 )
-cvs['scoring'] = 'precision_macro'
-
-# Run combined
+pt_data = all_data[2]
 merge_stages = merged_data['stages_simple']
-merge_pows = get_pow_bands(merged_data,scaler)
-merge_stages_oh = get_oh_labels(merge_stages)
-merge_sample_weights = get_inverse_freq_weights(merge_stages)
-fit_params['sample_weight'] = merge_sample_weights
-pp(cvs)
-results = cross_val_score(**cvs,X=merge_pows,y=merge_stages_oh,verbose=1,fit_params=fit_params)
-import ipdb; ipdb.set_trace()
+pt_stages = pt_data['stages_simple']
 
+merge_pows = get_pow_bands(merged_data,scaler)
+pt_pows = get_pow_bands(pt_data,scaler)
+
+merge_stages_oh = get_oh_labels(merge_stages)
+pt_stages_oh = get_oh_labels(pt_stages)
+
+merge_sample_weights = get_inverse_freq_weights(merge_stages)
+pt_sample_weights = get_inverse_freq_weights(pt_stages)
+
+fit_params['sample_weight'] = merge_sample_weights
+clf = CVScore(**cvs)
+clf.fit(X=merge_pows,y=merge_stages,fit_params=fit_params)
 
 def run_cross_validation(pows,stages,id,filename_base='results',sample_weight=None,verbose=0):
     print('Begining cross validation for pt',id,'...')
@@ -85,15 +92,3 @@ def run_individual(all_data):
                 sample_weight=sample_weights,
                 verbose=0,
                 filename_base='3cat_results')
-
-# Run individual
-# run_individual(all_data)
-
-prefix='ts_combined'
-run_cross_validation(
-        merge_pows,
-        merge_stages_oh,
-        prefix,
-        filename_base='9pt_results',
-        sample_weight=merge_sample_weights,
-        verbose=0)
