@@ -95,7 +95,6 @@ run_cross_validation(
         merge_pows,
         merge_stages_oh,
         prefix,
-        filename_base='3cat_results',
+        filename_base='9pt_results',
         sample_weight=merge_sample_weights,
-        verbose=1)
-
+        verbose=0)
