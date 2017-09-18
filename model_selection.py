@@ -1,7 +1,6 @@
 import numpy as np
 
-from sklearn.model_selection import StratifiedShuffleSplit
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedShuffleSplit,KFold,LeaveOneGroupOut
 from sklearn.base import BaseEstimator,ClassifierMixin
 from sklearn.metrics import accuracy_score,make_scorer,precision_recall_fscore_support
 from keras.wrappers.scikit_learn import KerasClassifier
@@ -27,13 +26,13 @@ class CVScore():
         for m in self.scoring_metrics:
             self.cv_results_['test_'+m]=[]
 
-    def fit(self,X,y,fit_params):
+    def fit(self,X,y,cv_iter,fit_params):
 
         self.y_classes = np.unique(y)
         sample_weight = fit_params.pop('sample_weight',None)
 
         i = 1
-        for train_idx,test_idx in self.cv.split(X,y):
+        for train_idx,test_idx in cv_iter:
             x_train,y_train = X[train_idx],y[train_idx]
             x_test,y_true = X[test_idx],y[test_idx]
             if sample_weight is not None:
@@ -55,6 +54,7 @@ class CVScore():
             for k,v in zip(cols,[a,p,r,f]):
                 self.cv_results_[k].append(v)
             self.models_.append(self.estimator.model)
+            i+=1
 
 def prepare_cvs(model,cv,scoring=[accuracy_score],n_splits=10,shuffle=True,groups=None,**sk_params):
     models = dict(
@@ -75,6 +75,6 @@ def prepare_cvs(model,cv,scoring=[accuracy_score],n_splits=10,shuffle=True,group
     elif cv in ['sss','stratified_shuffle_split']:
         cvs['cv'] = StratifiedShuffleSplit(n_splits=n_splits)
     elif cv in ['logo','LeaveOneGroupOut']:
-        cvs['cv'] = LeaveOneGroupOut(n_splits=n_splits,groups=groups)
+        cvs['cv'] = LeaveOneGroupOut()
 
     return cvs

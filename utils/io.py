@@ -6,8 +6,21 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 
+
+def osx_path():
+    return '/Users/elijahc/data/uminn/preprocessed'
+
 def merge_nrem_state(states):
     return np.array([2 if s in [1,2,3] else s for s in states])
+
+def merge_data(records,merge_keys=None,simple=False):
+    merged_data = {}
+    for k in merge_keys:
+        merged_data[k] = np.concatenate( [d[k] for d in records] )
+    if simple:
+        merged_data['stages_simple'] = merge_nrem_state(merged_data['stages'][:,2])
+    return merged_data
+
 
 def load_preprocessed(
         data_path='/home/elijahc/data/uminn/preprocessed',
@@ -29,12 +42,7 @@ def load_preprocessed(
     file_paths = [os.path.join(data_path,fname) for fname in file_names]
     all_data = [ sio.loadmat(fp) for fp in file_paths ]
     if merge_keys is not None:
-        merged_data = {}
-        for k in merge_keys:
-            merged_data[k] = np.concatenate( [d[k] for d in all_data] )
-        if simple:
-            merged_data['stages_simple'] = merge_nrem_state(merged_data['stages'][:,2])
-        return merged_data
+        return merge_data(all_data,merge_keys,simple)
     else:
         if simple:
             for d in all_data:
