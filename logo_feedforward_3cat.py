@@ -24,14 +24,14 @@ groups = np.concatenate(groups,axis=0)
 logo = LeaveOneGroupOut()
 
 model_params = dict(
-    layer_spec=[64],
+    layer_spec=[32],
     activ='relu',
     optim='nadam',
     num_labels=3
 )
 fit_params = dict(
-    validation_split=0.1,
-    epochs=100,
+    # validation_split=0.1,
+    epochs=200,
     verbose=0,
     sample_weight=uio.get_inverse_freq_weights(labels,sqrt=True)
 )
