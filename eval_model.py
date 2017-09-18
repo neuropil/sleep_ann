@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+import pandas as pd
 from pprint import pprint as pp
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.preprocessing import StandardScaler
@@ -81,7 +82,10 @@ if __name__ == "__main__":
     )
     pp(vars(args))
     power_bands = get_pow_bands(data,scaler)
-    fit_params['sample_weight'] = get_inverse_freq_weights(sleep_stages)
-    import ipdb; ipdb.set_trace()
+    fit_params['sample_weight'] = get_inverse_freq_weights(sleep_stages,sqrt=True)
     clf = CVScore(**cvs)
     clf.fit(X=power_bands,y=sleep_stages,fit_params=fit_params)
+    import ipdb; ipdb.set_trace()
+    models = clf.models_
+    cv_df = pd.DataFrame(clf.cv_results_)
+    cv_df.to_pickle('merge_sss_save_models.df')

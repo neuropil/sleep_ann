@@ -41,13 +41,16 @@ def load_preprocessed(
                 d['stages_simple']=merge_nrem_state(d['stages'][:,2])
         return all_data
 
-def get_inverse_freq_weights(labels):
+def get_inverse_freq_weights(labels,sqrt=False):
     label_bct = np.bincount(labels)
     label_pct = label_bct/label_bct.sum()
     nz = np.nonzero(label_pct)[0].tolist()
     sparse_weights = 1/label_pct[np.nonzero(label_pct)]
     sample_weights = np.array([ sparse_weights[nz.index(s)] for s in labels ])
-    return sample_weights
+    if sqrt:
+        return np.sqrt(sample_weights)
+    else:
+        return sample_weights
 
 
 def get_integer_labels(labels):

@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score,make_scorer,precision_recall_fscore_s
 from keras.wrappers.scikit_learn import KerasClassifier
 
 from nn_models import feedforward,basic_rnn
-from utils import get_oh_labels
+from utils.io import get_oh_labels
 
 class CVScore():
 
@@ -55,8 +55,8 @@ class CVScore():
             for k,v in zip(cols,[a,p,r,f]):
                 self.cv_results_[k].append(v)
             self.models_.append(self.estimator.model)
-        
-def prepare_cvs(model,cv,scoring=[accuracy_score],n_splits=10,shuffle=True,**sk_params):
+
+def prepare_cvs(model,cv,scoring=[accuracy_score],n_splits=10,shuffle=True,groups=None,**sk_params):
     models = dict(
         feedforward=feedforward,
         basic_rnn=basic_rnn
@@ -75,6 +75,6 @@ def prepare_cvs(model,cv,scoring=[accuracy_score],n_splits=10,shuffle=True,**sk_
     elif cv in ['sss','stratified_shuffle_split']:
         cvs['cv'] = StratifiedShuffleSplit(n_splits=n_splits)
     elif cv in ['logo','LeaveOneGroupOut']:
-        cvs['cv'] = LeaveOneGroupOut(n_splits=n_splits)
+        cvs['cv'] = LeaveOneGroupOut(n_splits=n_splits,groups=groups)
 
     return cvs
