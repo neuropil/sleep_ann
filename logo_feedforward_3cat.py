@@ -6,7 +6,7 @@ import utils.io as uio
 from model_selection import prepare_cvs,CVScore
 
 from sklearn.model_selection import LeaveOneGroupOut
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler,OneHotEncoder
 from sklearn.metrics import precision_recall_fscore_support
 
 # Load data
@@ -25,7 +25,8 @@ logo = LeaveOneGroupOut()
 model_params = dict(
     layer_spec=[64],
     activ='relu',
-    optim='nadam'
+    optim='nadam',
+    num_labels=3
 )
 fit_params = dict(
     validation_split=0.1,
@@ -35,4 +36,7 @@ fit_params = dict(
 cvs_comp = prepare_cvs(model='feedforward',cv='logo',groups=groups,**model_params)
 cvs = CVScore(**cvs_comp)
 cvs_iter = cvs.cv.split(band_pows,labels,groups)
-import ipdb; ipdb.set_trace()
+oh_encoder = OneHotEncoder(sparse=False)
+int_encoded = labels.reshape(len(labels),1)
+oh_encoder.fit(int_encoded)
+cvs.fit(band_pows,labels,cvs_iter,oh_encoder,fit_params=fit_params)

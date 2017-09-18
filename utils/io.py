@@ -71,7 +71,7 @@ def get_label_freq(labels):
     bfreq = bcount/len(int_enc)
     return bfreq
 
-def get_oh_labels(dat):
+def get_oh_labels(dat,encoder=None):
     if isinstance(dat,np.ndarray):
         sleep_labels = dat.astype(np.int8)
     elif isinstance(dat,dict):
@@ -79,10 +79,14 @@ def get_oh_labels(dat):
         windows = stages[:,0:2]
         sleep_labels = stages[:,2].astype(np.int8)
 
-    oh_encoder = OneHotEncoder(sparse=False)
-    integer_encoded = get_integer_labels(sleep_labels)
-    integer_encoded = integer_encoded.reshape(len(integer_encoded),1)
-    oh_labels = oh_encoder.fit_transform(integer_encoded)
+    # integer_encoded = get_integer_labels(sleep_labels)
+    integer_encoded = sleep_labels.reshape(len(sleep_labels),1)
+
+    if encoder is None:
+        oh_encoder = OneHotEncoder(sparse=False)
+        oh_encoder.fit(integer_encoded)
+
+    oh_labels = encoder.transform(integer_encoded)
 
     return oh_labels
 

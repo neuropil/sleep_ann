@@ -26,7 +26,7 @@ class CVScore():
         for m in self.scoring_metrics:
             self.cv_results_['test_'+m]=[]
 
-    def fit(self,X,y,cv_iter,fit_params):
+    def fit(self,X,y,cv_iter,oh_encoder,fit_params):
 
         self.y_classes = np.unique(y)
         sample_weight = fit_params.pop('sample_weight',None)
@@ -40,7 +40,7 @@ class CVScore():
             else:
                 train_sample_weight = None
 
-            y_train_oh = get_oh_labels(y_train)
+            y_train_oh = get_oh_labels(y_train,oh_encoder)
 
             self.estimator.fit(x_train,y_train_oh,sample_weight=train_sample_weight,
                 **fit_params)
