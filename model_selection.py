@@ -62,7 +62,7 @@ class CVScore():
             self.models_.append(self.estimator.model)
             i+=1
 
-def prepare_cvs(model,cv,scoring=[accuracy_score],n_splits=10,shuffle=True,groups=None,**sk_params):
+def prepare_cvs(model,cv,scoring=[accuracy_score],n_splits=9,shuffle=True,groups=None,**sk_params):
     models = dict(
         feedforward=feedforward,
         basic_rnn=basic_rnn

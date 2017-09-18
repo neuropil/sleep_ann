@@ -35,7 +35,7 @@ fit_params = dict(
     verbose=0,
     sample_weight=uio.get_inverse_freq_weights(labels,sqrt=True)
 )
-cvs_comp = prepare_cvs(model='feedforward',cv='logo',groups=groups,**model_params)
+cvs_comp = prepare_cvs(model='feedforward',cv='logo',n_splits=9,groups=groups,**model_params)
 cvs = CVScore(**cvs_comp)
 cvs_iter = cvs.cv.split(band_pows,labels,groups)
 oh_encoder = OneHotEncoder(sparse=False)
