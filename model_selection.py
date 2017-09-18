@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pickle
 
 from sklearn.model_selection import StratifiedShuffleSplit,KFold,LeaveOneGroupOut
 from sklearn.base import BaseEstimator,ClassifierMixin
@@ -31,6 +32,14 @@ class CVScore():
         cv_df = pd.DataFrame(self.cv_results_)
         print('Writing results '+fp+'...')
         cv_df.to_pickle(fp)
+
+    def save_parameters(self,fp,fit_params,model_params):
+        params = dict(
+            fit=fit_params,
+            model=model_params,
+        )
+        print('Attempting to save params at '+fp+'...')
+        pickle.dumps(params,open(fp,'wb'))  
 
     def fit(self,X,y,cv_iter,oh_encoder,fit_params):
 
