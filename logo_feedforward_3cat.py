@@ -10,8 +10,9 @@ from sklearn.preprocessing import StandardScaler,OneHotEncoder
 from sklearn.metrics import precision_recall_fscore_support
 
 # Load data
-osx_data_path = uio.osx_path()
-all_data = uio.load_preprocessed(data_path=osx_data_path,simple=True)
+# osx_data_path = uio.osx_path()
+# all_data = uio.load_preprocessed(data_path=osx_data_path,simple=True)
+all_data = uio.load_preprocessed(simple=True)
 merge_data = uio.merge_data(all_data,merge_keys=['pows','stages'],simple=True)
 scaler = StandardScaler()
 scaler.fit(merge_data['pows'])
@@ -30,8 +31,9 @@ model_params = dict(
 )
 fit_params = dict(
     validation_split=0.1,
-    epochs=500,
-    verbose=0
+    epochs=100,
+    verbose=0,
+    sample_weight=uio.get_inverse_freq_weights(labels,sqrt=True)
 )
 cvs_comp = prepare_cvs(model='feedforward',cv='logo',groups=groups,**model_params)
 cvs = CVScore(**cvs_comp)
@@ -40,3 +42,5 @@ oh_encoder = OneHotEncoder(sparse=False)
 int_encoded = labels.reshape(len(labels),1)
 oh_encoder.fit(int_encoded)
 cvs.fit(band_pows,labels,cvs_iter,oh_encoder,fit_params=fit_params)
+import ipdb; ipdb.set_trace()
+cvs.save_results('results/logo_merge_results.df')

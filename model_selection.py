@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from sklearn.model_selection import StratifiedShuffleSplit,KFold,LeaveOneGroupOut
 from sklearn.base import BaseEstimator,ClassifierMixin
@@ -26,6 +27,11 @@ class CVScore():
         for m in self.scoring_metrics:
             self.cv_results_['test_'+m]=[]
 
+    def save_results(self,fp):
+        cv_df = pd.DataFrame(self.cv_results_)
+        print('Writing results '+fp+'...')
+        cv_df.to_pickle(fp)
+
     def fit(self,X,y,cv_iter,oh_encoder,fit_params):
 
         self.y_classes = np.unique(y)
@@ -45,7 +51,7 @@ class CVScore():
             self.estimator.fit(x_train,y_train_oh,sample_weight=train_sample_weight,
                 **fit_params)
 
-            l,a = self.estimator.model.evaluate(x_test,get_oh_labels(y_true),batch_size=128,verbose=0)
+            l,a = self.estimator.model.evaluate(x_test,get_oh_labels(y_true,oh_encoder),batch_size=128,verbose=0)
             y_pred_class=self.estimator.model.predict_classes(x_test,batch_size=128,verbose=0) 
             y_pred = [ self.y_classes[v] for v in y_pred_class]
             p,r,f,_ = self.score_func(y_true,y_pred,average='weighted')
