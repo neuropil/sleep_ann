@@ -108,3 +108,6 @@ examples/
 
 # Ignore temp pandas dataframe pickles
 *.df
+
+# Ignore numpy pickles
+*.npy
