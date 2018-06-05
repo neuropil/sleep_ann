@@ -31,7 +31,7 @@ model_params = dict(
 )
 fit_params = dict(
     # validation_split=0.1,
-    epochs=200,
+    epochs=300,
     verbose=0,
     sample_weight=uio.get_inverse_freq_weights(labels,sqrt=True)
 )
@@ -42,5 +42,6 @@ oh_encoder = OneHotEncoder(sparse=False)
 int_encoded = labels.reshape(len(labels),1)
 oh_encoder.fit(int_encoded)
 cvs.fit(band_pows,labels,cvs_iter,oh_encoder,fit_params=fit_params)
-cvs.save_results('results/logo_merge_32_results.df')
+cvs.save_results('results/performance_results.df')
+import ipdb; ipdb.set_trace()
 cvs.save_parameters('results/logo_merge_32_results.pk',fit_params,model_params)
