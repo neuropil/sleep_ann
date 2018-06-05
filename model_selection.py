@@ -21,6 +21,8 @@ class CVScore():
             self.cv = KFold()
 
         self.score_func = score_func
+        self.train_idxs = []
+        self.test_idxs = []
         self.scoring_metrics = ['accuracy','precision','recall','fscore']
         self.cv_results_ = {}
         self.models_ = []
@@ -69,6 +71,8 @@ class CVScore():
             for k,v in zip(cols,[a,p,r,f]):
                 self.cv_results_[k].append(v)
             self.models_.append(self.estimator.model)
+            self.train_idxs.append(train_idx)
+            self.test_idxs.append(test_idx)
             i+=1
 
 def prepare_cvs(model,cv,scoring=[accuracy_score],n_splits=9,shuffle=True,groups=None,**sk_params):
