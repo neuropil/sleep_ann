@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from pprint import pprint as pp
 from nn_models import feedforward
-import utils.io as uio
+import src.utils.io as uio
 from model_selection import prepare_cvs,CVScore
 
 from sklearn.model_selection import LeaveOneGroupOut
