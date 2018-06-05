@@ -103,9 +103,6 @@ ENV/
 # vscode
 .vscode/
 
-# local examples folder
-examples/
-
 # Ignore temp pandas dataframe pickles
 *.df
 
